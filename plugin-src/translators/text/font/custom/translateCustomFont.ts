@@ -7,7 +7,7 @@ export const translateCustomFont = (
   fontName: FontName | undefined,
   fontWeight: string
 ): Pick<TextTypography, 'fontId' | 'fontVariantId' | 'fontWeight'> | undefined => {
-  if (fontName) {
+  if (fontName?.family) {
     missingFonts.add(fontName.family);
   }
 
