@@ -15,9 +15,8 @@ export const translateTextStyle = (figmaStyle: TextStyle): TypographyStyle => {
     name: translateStyleName(figmaStyle),
     textStyle: {
       ...translateFontName(figmaStyle.fontName),
-      // Figma can return remote library text styles with an unresolvable fontName
-      // (missing or empty family); Penpot requires font-family to be a non-empty string.
-      fontFamily: figmaStyle.fontName?.family || 'sourcesanspro',
+      // Figma can return remote text styles without a usable fontName; Penpot requires font-family.
+      fontFamily: figmaStyle.fontName?.family ?? 'sourcesanspro',
       fontSize: figmaStyle.fontSize.toString(),
       fontStyle: translateFontStyle(figmaStyle),
       textDecoration: translateTextDecoration(figmaStyle),
