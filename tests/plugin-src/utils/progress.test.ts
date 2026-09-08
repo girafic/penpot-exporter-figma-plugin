@@ -108,6 +108,34 @@ describe('progress', () => {
       expect(mockPostMessage).toHaveBeenCalledTimes(3);
     });
 
+    it('reenvía un PROGRESS_CURRENT_ITEM repetido tras cambiar de página con otro item bufferizado', () => {
+      reportProgress({ type: 'PROGRESS_CURRENT_ITEM', data: 'Item 1' });
+      vi.advanceTimersByTime(500);
+      expect(mockPostMessage).toHaveBeenCalledTimes(1);
+
+      // Este item sigue en el buffer cuando empieza la siguiente página.
+      reportProgress({ type: 'PROGRESS_CURRENT_ITEM', data: 'Item 2' });
+      reportProgress({ type: 'PROGRESS_CURRENT_PAGE', data: 'Página 2' });
+      expect(mockPostMessage).toHaveBeenCalledTimes(3);
+      expect(mockPostMessage).toHaveBeenNthCalledWith(2, {
+        type: 'PROGRESS_CURRENT_ITEM',
+        data: 'Item 2'
+      });
+      expect(mockPostMessage).toHaveBeenNthCalledWith(3, {
+        type: 'PROGRESS_CURRENT_PAGE',
+        data: 'Página 2'
+      });
+
+      // El último item de la página anterior debe reenviarse en esta página.
+      reportProgress({ type: 'PROGRESS_CURRENT_ITEM', data: 'Item 2' });
+      vi.advanceTimersByTime(500);
+      expect(mockPostMessage).toHaveBeenCalledTimes(4);
+      expect(mockPostMessage).toHaveBeenLastCalledWith({
+        type: 'PROGRESS_CURRENT_ITEM',
+        data: 'Item 2'
+      });
+    });
+
     it('bufferiza mensaje PROGRESS_PROCESSED_ITEMS', () => {
       const message = {
         type: 'PROGRESS_PROCESSED_ITEMS',
