@@ -5,7 +5,8 @@ import {
   components,
   degradedLayers,
   externalLibraries,
-  missingFonts
+  missingFonts,
+  missingPageIds
 } from '@plugin/libraries';
 import {
   processAssets,
@@ -41,6 +42,7 @@ export const transformDocumentNode = async (
     componentProperties: toObject(componentProperties),
     externalLibraries: toObject(externalLibraries),
     missingFonts: Array.from(missingFonts),
+    missingPageIds: Array.from(missingPageIds),
     degradedLayers: Array.from(degradedLayers.values()),
     isShared: isSharedLibrary
   };

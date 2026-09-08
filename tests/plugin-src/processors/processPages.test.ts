@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { missingPageIds } from '@plugin/libraries';
 import { processPages, selectPagesToProcess } from '@plugin/processors/processPages';
 import { reportProgress } from '@plugin/utils';
+import { ExpectedUserError } from '@plugin/utils/expectedUserError';
 
 import type { PluginMessage, ProgressCurrentPageMessage } from '@ui/types';
 
@@ -41,6 +43,7 @@ const reportedPageNames = (): string[] =>
 
 describe('selectPagesToProcess', () => {
   beforeEach(() => {
+    missingPageIds.clear();
     (globalThis as { figma?: typeof figma }).figma = {
       currentPage: pageTwo
     } as unknown as typeof figma;
@@ -80,10 +83,13 @@ describe('selectPagesToProcess', () => {
     expect(selectPagesToProcess(documentNode, 'selection', ['2:2', 'deleted'])).toEqual([pageTwo]);
   });
 
-  it('throws when no selected page exists in the document', () => {
-    expect(() => selectPagesToProcess(documentNode, 'selection', ['deleted'])).toThrow(
-      /None of the selected pages/
-    );
+  it('throws an ExpectedUserError when no selected page exists in the document', () => {
+    try {
+      selectPagesToProcess(documentNode, 'selection', ['deleted']);
+      throw new Error('Expected selectPagesToProcess to throw');
+    } catch (error) {
+      expect(error).toBeInstanceOf(ExpectedUserError);
+    }
   });
 
   it('throws when the selection is empty', () => {
@@ -96,6 +102,7 @@ describe('selectPagesToProcess', () => {
 describe('processPages', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    missingPageIds.clear();
 
     (globalThis as { figma?: typeof figma }).figma = {
       currentPage: pageTwo
@@ -112,6 +119,33 @@ describe('processPages', () => {
     await processPages(documentNode, 'selection', ['3:3', '1:1']);
 
     expect(reportedPageNames()).toEqual(['Cover', 'Drafts']);
+  });
+
+  it('records deleted selected pages and processes the surviving pages', async () => {
+    await processPages(documentNode, 'selection', ['1:1', 'deleted']);
+
+    expect(missingPageIds).toEqual(new Set(['deleted']));
+    expect(reportedPageNames()).toEqual(['Cover']);
+    expect(pageOne.loadAsync).toHaveBeenCalledTimes(1);
+  });
+
+  it('throws an ExpectedUserError when every selected page was deleted', async () => {
+    let thrownError: unknown;
+
+    try {
+      await processPages(documentNode, 'selection', ['deleted']);
+    } catch (error) {
+      thrownError = error;
+    }
+
+    expect(thrownError).toBeInstanceOf(ExpectedUserError);
+    expect(missingPageIds).toEqual(new Set(['deleted']));
+  });
+
+  it('does not record missing page ids for a complete selected-page export', async () => {
+    await processPages(documentNode, 'selection', ['1:1', '2:2']);
+
+    expect(missingPageIds).toEqual(new Set());
   });
 
   it('reports the page name before the page is counted as processed', async () => {

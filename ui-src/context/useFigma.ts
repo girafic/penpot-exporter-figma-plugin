@@ -27,6 +27,7 @@ export type FormValues = {
 
 export type UseFigmaHook = {
   missingFonts: string[] | undefined;
+  missingPageIds: string[];
   degradedLayers: string[] | undefined;
   exporting: boolean;
   summary: boolean;
@@ -58,6 +59,7 @@ export type UseFigmaHook = {
 
 export const useFigma = (): UseFigmaHook => {
   const [missingFonts, setMissingFonts] = useState<string[]>();
+  const [missingPageIds, setMissingPageIds] = useState<string[]>([]);
   const [degradedLayers, setDegradedLayers] = useState<string[]>();
   const [exporting, setExporting] = useState(false);
   const [summary, setSummary] = useState(false);
@@ -99,7 +101,7 @@ export const useFigma = (): UseFigmaHook => {
       'Error Layer': payload.layer
     });
 
-    if (payload.origin === 'plugin') {
+    if (payload.origin === 'plugin' && !payload.expected) {
       const sentryError = new Error(payload.message);
       if (payload.stack) sentryError.stack = payload.stack;
       Sentry.captureException(sentryError, {
@@ -158,6 +160,7 @@ export const useFigma = (): UseFigmaHook => {
       }
       case 'RELOAD': {
         setMissingFonts(undefined);
+        setMissingPageIds([]);
         setDegradedLayers(undefined);
         setExporting(false);
         setSummary(false);
@@ -184,6 +187,7 @@ export const useFigma = (): UseFigmaHook => {
         break;
       }
       case 'PENPOT_DOCUMENT': {
+        setMissingPageIds(pluginMessage.data.missingPageIds ?? []);
         if (pluginMessage.data.missingFonts) {
           setMissingFonts(pluginMessage.data.missingFonts);
         }
@@ -372,6 +376,7 @@ export const useFigma = (): UseFigmaHook => {
 
   return {
     missingFonts,
+    missingPageIds,
     degradedLayers,
     exporting,
     summary,

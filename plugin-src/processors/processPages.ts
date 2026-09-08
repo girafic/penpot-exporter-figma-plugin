@@ -1,7 +1,9 @@
 import { yieldByTime } from '@common/sleep';
 
+import { missingPageIds } from '@plugin/libraries';
 import { transformPageNode } from '@plugin/transformers';
 import { flushProgress, reportProgress } from '@plugin/utils';
+import { ExpectedUserError } from '@plugin/utils/expectedUserError';
 
 import type { PenpotPage } from '@ui/lib/types/penpotPage';
 import type { ExportScope } from '@ui/types';
@@ -22,6 +24,19 @@ export const selectPagesToProcess = (
   if (scope === 'selection') {
     const selectedIds = new Set(pageIds);
     const pages = node.children.filter(page => selectedIds.has(page.id));
+    const existingIds = new Set(pages.map(page => page.id));
+
+    for (const pageId of pageIds) {
+      if (!existingIds.has(pageId)) {
+        missingPageIds.add(pageId);
+      }
+    }
+
+    if (pages.length === 0 && pageIds.length > 0) {
+      throw new ExpectedUserError(
+        'None of the selected pages exist in the file anymore. Go back and select existing pages.'
+      );
+    }
 
     if (pages.length === 0) {
       throw new Error(

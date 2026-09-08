@@ -23,7 +23,8 @@ vi.mock('@plugin/utils', async () => {
 
 (globalThis as { figma?: typeof figma }).figma = {
   ui: { postMessage: mockPostMessage },
-  root: {} as typeof figma.root
+  root: { children: [] } as unknown as typeof figma.root,
+  currentPage: { id: '1:1' } as PageNode
 } as unknown as typeof figma;
 
 describe('handleExportMessage', () => {
@@ -63,6 +64,44 @@ describe('handleExportMessage', () => {
         message: 'boom',
         origin: 'plugin',
         stack: expect.any(String)
+      })
+    });
+  });
+
+  it('marks expected user errors in the ERROR payload', async () => {
+    const { ExpectedUserError } = await import('@plugin/utils/expectedUserError');
+    mockTransformDocumentNode.mockRejectedValue(new ExpectedUserError('missing page'));
+
+    await handleExportMessage('all', []);
+
+    const errorCalls = mockPostMessage.mock.calls.filter(([msg]) => msg.type === 'ERROR');
+    expect(errorCalls).toHaveLength(1);
+    expect(errorCalls[0][0]).toEqual({
+      type: 'ERROR',
+      data: expect.objectContaining({
+        message: 'missing page',
+        origin: 'plugin',
+        expected: true
+      })
+    });
+    expect(mockPostMessage).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'DOCUMENT_PAGES' })
+    );
+  });
+
+  it('marks ordinary errors as unexpected in the ERROR payload', async () => {
+    mockTransformDocumentNode.mockRejectedValue(new Error('boom'));
+
+    await handleExportMessage('all', []);
+
+    const errorCalls = mockPostMessage.mock.calls.filter(([msg]) => msg.type === 'ERROR');
+    expect(errorCalls).toHaveLength(1);
+    expect(errorCalls[0][0]).toEqual({
+      type: 'ERROR',
+      data: expect.objectContaining({
+        message: 'boom',
+        origin: 'plugin',
+        expected: false
       })
     });
   });

@@ -1,3 +1,4 @@
+import { getDocumentPages } from '@plugin/getDocumentPages';
 import {
   clearAllState,
   componentProperties,
@@ -6,6 +7,7 @@ import {
   externalLibraries,
   images,
   missingFonts,
+  missingPageIds,
   overrides,
   paintStyles,
   textStyles,
@@ -25,6 +27,7 @@ import {
   reportProgress,
   resetProgress
 } from '@plugin/utils';
+import { ExpectedUserError } from '@plugin/utils/expectedUserError';
 import { isFigmaPlatformError } from '@plugin/utils/figmaPlatformError';
 
 import type { ErrorPayload, ExportScope, ExternalLibrary, PenpotDocument } from '@ui/types';
@@ -50,7 +53,8 @@ const buildErrorPayload = (error: unknown): ErrorPayload => ({
   stack: error instanceof Error ? error.stack : undefined,
   step: getCurrentStep(),
   layer: getCurrentItem(),
-  origin: 'plugin'
+  origin: 'plugin',
+  expected: error instanceof ExpectedUserError
 });
 
 export const postPluginError = (error: unknown): void => {
@@ -83,6 +87,10 @@ export const handleExportMessage = async (
   } catch (error) {
     flushProgress();
     postPluginError(error);
+
+    if (error instanceof ExpectedUserError && !isSlidesEditor() && !isFigJamEditor()) {
+      getDocumentPages();
+    }
   }
 };
 
@@ -90,6 +98,7 @@ export const handleRetryMessage = async (): Promise<void> => {
   try {
     resetProgress();
     missingFonts.clear();
+    missingPageIds.clear();
     degradedLayers.clear();
     textStyles.clear();
     paintStyles.clear();
