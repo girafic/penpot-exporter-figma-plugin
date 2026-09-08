@@ -1,5 +1,21 @@
 # penpot-exporter
 
+## 0.24.3
+
+### Patch Changes
+
+- [#420](https://github.com/penpot/penpot-exporter-figma-plugin/pull/420)
+  [`38a46ad`](https://github.com/penpot/penpot-exporter-figma-plugin/commit/38a46ad872c3b74b67fb6a1ca78a6e8b467f3ab1)
+  Thanks [@SpykeRel04D](https://github.com/SpykeRel04D)! - Recognize Figma's grid-corruption
+  validation errors generically and detect corrupted grid track data so affected grid layers degrade
+  gracefully instead of aborting the export.
+
+- [#424](https://github.com/penpot/penpot-exporter-figma-plugin/pull/424)
+  [`9e886b9`](https://github.com/penpot/penpot-exporter-figma-plugin/commit/9e886b98863f9d35537476d21655ad0578dbce15)
+  Thanks [@SpykeRel04D](https://github.com/SpykeRel04D)! - Fall back to a default font family for
+  text styles with no resolvable font name instead of exporting typographies Penpot rejects with a
+  missing `font-family`.
+
 ## 0.24.2
 
 ### Patch Changes
