@@ -1,4 +1,5 @@
 import { transformId } from '@plugin/transformers/partials';
+import { FigmaPlatformDataError } from '@plugin/utils/figmaPlatformError';
 import { generateUuid } from '@plugin/utils/generateUuid';
 
 import type {
@@ -9,6 +10,7 @@ import type {
   JustifyAlignContent,
   JustifyAlignItems,
   LayoutAlignSelf,
+  LayoutAttributes,
   LayoutFlexDir,
   LayoutGap,
   LayoutGridDir,
@@ -236,6 +238,10 @@ export const translateLayoutItemAlignSelf = (align: FigmaLayoutAlign): LayoutAli
 };
 
 const translateGridTrack = (gridTrack: GridTrackSize): GridTrack => {
+  if (gridTrack == null || typeof gridTrack.value !== 'number') {
+    throw new FigmaPlatformDataError('Grid track read returned corrupted data');
+  }
+
   return {
     type: gridTrack.type === 'FLEX' ? 'flex' : 'fixed',
     value: gridTrack.value
@@ -366,3 +372,28 @@ export const translateGridCells = (node: BaseFrameMixin): { [uuid: Uuid]: GridCe
 
   return cells;
 };
+
+export type GridAttributes = Pick<
+  LayoutAttributes,
+  'layoutGridDir' | 'layoutGridRows' | 'layoutGridColumns' | 'layoutGridCells'
+>;
+
+export const translateGridAttributes = (node: BaseFrameMixin): GridAttributes => ({
+  layoutGridDir: translateLayoutGridDir(node.layoutMode),
+  layoutGridRows: translateGridTracks(node.gridRowSizes),
+  layoutGridColumns: translateGridTracks(node.gridColumnSizes),
+  layoutGridCells: translateGridCells(node)
+});
+
+export const translateGridAttributesWithDefaultTracks = (node: BaseFrameMixin): GridAttributes => ({
+  layoutGridDir: translateLayoutGridDir(node.layoutMode),
+  layoutGridRows: Array.from({ length: node.gridRowSizes.length }, () => ({
+    type: 'flex' as const,
+    value: 1
+  })),
+  layoutGridColumns: Array.from({ length: node.gridColumnSizes.length }, () => ({
+    type: 'flex' as const,
+    value: 1
+  })),
+  layoutGridCells: translateGridCells(node)
+});
