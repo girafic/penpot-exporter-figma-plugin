@@ -11,7 +11,10 @@ export const ExportSummary = (): JSX.Element | null => {
     exportedBlob,
     exportTime,
     exportScope,
+    selectedPageIds,
+    documentPages,
     missingFonts,
+    missingPageIds,
     degradedLayers,
     downloadBlob,
     cancel
@@ -22,10 +25,13 @@ export const ExportSummary = (): JSX.Element | null => {
   }
 
   const hasMissingFonts = missingFonts && missingFonts.length > 0;
+  const hasMissingPageIds = missingPageIds.length > 0;
   const hasDegradedLayers = degradedLayers && degradedLayers.length > 0;
   const isCurrentPageOnly = exportScope === 'current';
+  const isPartialExport = exportScope === 'selection';
   const exportSizeMB = exportedBlob.blob.size / (1024 * 1024);
   const isLargeExport = exportSizeMB > 200;
+  const exportedSelectedPageCount = selectedPageIds.length - missingPageIds.length;
 
   return (
     <Stack space="medium">
@@ -58,6 +64,36 @@ export const ExportSummary = (): JSX.Element | null => {
           This export contains only the current page. Components and other pages are not included.
           To export everything, select &quot;All pages&quot;.
         </Banner>
+      )}
+
+      {isPartialExport && (
+        <Banner icon={<Info size={14} />}>
+          This export contains only{' '}
+          {hasMissingPageIds
+            ? `${exportedSelectedPageCount} of the ${selectedPageIds.length} pages you selected`
+            : `the ${selectedPageIds.length} page${selectedPageIds.length > 1 ? 's' : ''} you selected`}
+          . Components living on other pages are not included. To export everything, select
+          &quot;All pages&quot;.
+        </Banner>
+      )}
+
+      {hasMissingPageIds && (
+        <Stack space="xsmall">
+          <Banner icon={<CircleAlert size={14} />} variant="warning">
+            <strong>
+              {missingPageIds.length} selected page{missingPageIds.length > 1 ? 's' : ''} no longer
+              exist{missingPageIds.length === 1 ? 's' : ''} in the file and{' '}
+              {missingPageIds.length > 1 ? 'were' : 'was'} not exported
+            </strong>
+            <ul style={{ paddingLeft: '1.25rem', marginTop: '0.25rem' }}>
+              {missingPageIds.map(pageId => (
+                <li key={pageId}>
+                  {documentPages.find(page => page.id === pageId)?.name ?? pageId}
+                </li>
+              ))}
+            </ul>
+          </Banner>
+        </Stack>
       )}
 
       {hasMissingFonts && (

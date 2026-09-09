@@ -8,4 +8,5 @@ export type ErrorPayload = {
   step?: Steps;
   layer?: string;
   origin: ErrorOrigin;
+  expected?: boolean;
 };

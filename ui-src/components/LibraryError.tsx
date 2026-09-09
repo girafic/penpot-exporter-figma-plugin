@@ -88,6 +88,7 @@ const ErrorDetails = ({
 
 export const LibraryError = (): JSX.Element => {
   const { retry, cancel, error, editorType } = useFigmaContext();
+  const isExpectedError = error?.expected === true;
 
   const issueUrl = error
     ? buildErrorIssueUrl(formatErrorReport(error, editorType))
@@ -97,21 +98,33 @@ export const LibraryError = (): JSX.Element => {
     <Stack space="small">
       <Stack space="xsmall">
         <Banner icon={<CircleAlert size={14} />} variant="warning">
-          Oops! It looks like there was an <b>error generating the export file</b>.
+          {isExpectedError ? (
+            error?.message
+          ) : (
+            <>
+              Oops! It looks like there was an <b>error generating the export file</b>.
+            </>
+          )}
         </Banner>
-        <span>
-          Please{' '}
-          <Link href={issueUrl} target="_blank">
-            open an issue in our Github repository →
-          </Link>{' '}
-          and we&apos;ll be happy to assist you!
-        </span>
-        <span style={{ fontSize: '11px', opacity: 0.8 }}>
-          <b>Tip:</b> attaching the <code>.fig</code> file (or a minimal reproduction) helps us fix
-          this much faster. If it&apos;s confidential, mention it in the issue and we&apos;ll
-          arrange a private channel.
-        </span>
-        {error && <ErrorDetails error={error} editorType={editorType} />}
+        {isExpectedError ? (
+          <span>Update your selection and try the export again.</span>
+        ) : (
+          <>
+            <span>
+              Please{' '}
+              <Link href={issueUrl} target="_blank">
+                open an issue in our Github repository →
+              </Link>{' '}
+              and we&apos;ll be happy to assist you!
+            </span>
+            <span style={{ fontSize: '11px', opacity: 0.8 }}>
+              <b>Tip:</b> attaching the <code>.fig</code> file (or a minimal reproduction) helps us
+              fix this much faster. If it&apos;s confidential, mention it in the issue and
+              we&apos;ll arrange a private channel.
+            </span>
+            {error && <ErrorDetails error={error} editorType={editorType} />}
+          </>
+        )}
         <Stack space="xsmall" direction="row">
           <Button onClick={retry} fullWidth>
             Retry

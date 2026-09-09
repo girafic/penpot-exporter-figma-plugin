@@ -5,7 +5,8 @@ import {
   components,
   degradedLayers,
   externalLibraries,
-  missingFonts
+  missingFonts,
+  missingPageIds
 } from '@plugin/libraries';
 import {
   processAssets,
@@ -20,14 +21,15 @@ import type { ExportScope, PenpotDocument } from '@ui/types';
 
 export const transformDocumentNode = async (
   node: DocumentNode,
-  scope: ExportScope
+  scope: ExportScope,
+  pageIds: string[] = []
 ): Promise<PenpotDocument> => {
   const tokens = await processTokens();
 
   await registerPaintStyles();
   await registerTextStyles();
 
-  const children = await processPages(node, scope);
+  const children = await processPages(node, scope, pageIds);
   const [paintStyles, textStyles] = await processAssets();
 
   return {
@@ -40,6 +42,7 @@ export const transformDocumentNode = async (
     componentProperties: toObject(componentProperties),
     externalLibraries: toObject(externalLibraries),
     missingFonts: Array.from(missingFonts),
+    missingPageIds: Array.from(missingPageIds),
     degradedLayers: Array.from(degradedLayers.values()),
     isShared: isSharedLibrary
   };

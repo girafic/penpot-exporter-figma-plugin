@@ -5,7 +5,8 @@ import {
   components,
   degradedLayers,
   externalLibraries,
-  missingFonts
+  missingFonts,
+  missingPageIds
 } from '@plugin/libraries';
 import { processAssets } from '@plugin/processors';
 import { isSharedLibrary } from '@plugin/transformers';
@@ -29,6 +30,7 @@ export const buildPenpotDocument = async (
     componentProperties: toObject(componentProperties),
     externalLibraries: toObject(externalLibraries),
     missingFonts: Array.from(missingFonts),
+    missingPageIds: Array.from(missingPageIds),
     degradedLayers: Array.from(degradedLayers.values()),
     isShared: isSharedLibrary
   };

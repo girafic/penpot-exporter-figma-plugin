@@ -1,3 +1,4 @@
+import { getDocumentPages } from '@plugin/getDocumentPages';
 import {
   clearAllState,
   componentProperties,
@@ -6,6 +7,7 @@ import {
   externalLibraries,
   images,
   missingFonts,
+  missingPageIds,
   overrides,
   paintStyles,
   textStyles,
@@ -25,6 +27,7 @@ import {
   reportProgress,
   resetProgress
 } from '@plugin/utils';
+import { ExpectedUserError } from '@plugin/utils/expectedUserError';
 import { isFigmaPlatformError } from '@plugin/utils/figmaPlatformError';
 
 import type { ErrorPayload, ExportScope, ExternalLibrary, PenpotDocument } from '@ui/types';
@@ -35,10 +38,10 @@ const initializeExternalLibraries = (libraries: ExternalLibrary[]): void => {
   }
 };
 
-const buildDocument = async (scope: ExportScope): Promise<PenpotDocument> => {
+const buildDocument = async (scope: ExportScope, pageIds: string[]): Promise<PenpotDocument> => {
   if (isSlidesEditor()) return transformSlidesDocumentNode(figma.root);
   if (isFigJamEditor()) return transformFigJamDocumentNode(figma.root);
-  return transformDocumentNode(figma.root, scope);
+  return transformDocumentNode(figma.root, scope, pageIds);
 };
 
 const buildErrorPayload = (error: unknown): ErrorPayload => ({
@@ -50,7 +53,8 @@ const buildErrorPayload = (error: unknown): ErrorPayload => ({
   stack: error instanceof Error ? error.stack : undefined,
   step: getCurrentStep(),
   layer: getCurrentItem(),
-  origin: 'plugin'
+  origin: 'plugin',
+  expected: error instanceof ExpectedUserError
 });
 
 export const postPluginError = (error: unknown): void => {
@@ -63,7 +67,8 @@ export const postPluginError = (error: unknown): void => {
 
 export const handleExportMessage = async (
   scope: ExportScope,
-  libraries: ExternalLibrary[]
+  libraries: ExternalLibrary[],
+  pageIds: string[] = []
 ): Promise<void> => {
   try {
     // Clear all state maps and caches to prevent memory accumulation
@@ -71,7 +76,7 @@ export const handleExportMessage = async (
     resetProgress();
 
     initializeExternalLibraries(libraries);
-    const document = await buildDocument(scope);
+    const document = await buildDocument(scope, pageIds);
 
     flushProgress();
 
@@ -82,6 +87,10 @@ export const handleExportMessage = async (
   } catch (error) {
     flushProgress();
     postPluginError(error);
+
+    if (error instanceof ExpectedUserError && !isSlidesEditor() && !isFigJamEditor()) {
+      getDocumentPages();
+    }
   }
 };
 
@@ -89,6 +98,7 @@ export const handleRetryMessage = async (): Promise<void> => {
   try {
     resetProgress();
     missingFonts.clear();
+    missingPageIds.clear();
     degradedLayers.clear();
     textStyles.clear();
     paintStyles.clear();
