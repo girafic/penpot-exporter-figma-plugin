@@ -7,6 +7,20 @@ export const validatePenpotUrl = (value: string | undefined): string | true => {
   return result.success ? true : result.error;
 };
 
+export const isSelfHostedPenpotUrl = (value: string | undefined): boolean => {
+  try {
+    const url = new URL((value ?? '').trim());
+
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+      return false;
+    }
+
+    return url.hostname !== 'penpot.app' && !url.hostname.endsWith('.penpot.app');
+  } catch {
+    return false;
+  }
+};
+
 export const extractFileIdFromPenpotUrl = (url: string): string | undefined => {
   const result = parsePenpotUrl(url);
   return result.success && result.fileId ? result.fileId : undefined;

@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { extractFileIdFromPenpotUrl, validatePenpotUrl } from '@ui/utils/validatePenpotUrl';
+import {
+  extractFileIdFromPenpotUrl,
+  isSelfHostedPenpotUrl,
+  validatePenpotUrl
+} from '@ui/utils/validatePenpotUrl';
 
 const FILE_ID = 'c7f0d1de-77e4-80e0-8007-32b4b1bbd8b1';
 
@@ -71,5 +75,33 @@ describe('extractFileIdFromPenpotUrl', () => {
 
   it('returns undefined for an empty value', () => {
     expect(extractFileIdFromPenpotUrl('')).toBeUndefined();
+  });
+});
+
+describe('isSelfHostedPenpotUrl', () => {
+  it('returns false for official penpot.app URLs', () => {
+    expect(isSelfHostedPenpotUrl(`https://design.penpot.app/#/workspace?file-id=${FILE_ID}`)).toBe(
+      false
+    );
+    expect(isSelfHostedPenpotUrl('https://penpot.app/')).toBe(false);
+  });
+
+  it('returns true for self-hosted instance URLs', () => {
+    expect(isSelfHostedPenpotUrl(`http://localhost:9001/#/workspace?file-id=${FILE_ID}`)).toBe(
+      true
+    );
+    expect(isSelfHostedPenpotUrl('https://penpot.example.com/#/workspace')).toBe(true);
+  });
+
+  it('treats lookalike domains as self-hosted', () => {
+    expect(isSelfHostedPenpotUrl('https://not-penpot.app/')).toBe(true);
+    expect(isSelfHostedPenpotUrl('https://evilpenpot.app/')).toBe(true);
+  });
+
+  it('returns false for values that are not http(s) URLs', () => {
+    expect(isSelfHostedPenpotUrl('')).toBe(false);
+    expect(isSelfHostedPenpotUrl(undefined)).toBe(false);
+    expect(isSelfHostedPenpotUrl('not a url')).toBe(false);
+    expect(isSelfHostedPenpotUrl('ftp://penpot.example.com/')).toBe(false);
   });
 });
