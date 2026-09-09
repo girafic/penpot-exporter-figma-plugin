@@ -4,11 +4,12 @@ import { Controller, useFieldArray, useFormContext } from 'react-hook-form';
 
 import { Stack } from '@ui/components/Stack';
 import type { FormValues } from '@ui/context';
-import { validatePenpotUrl } from '@ui/utils';
+import { isSelfHostedPenpotUrl, validatePenpotUrl } from '@ui/utils';
 
 export const ExternalLibrariesFieldSet = (): JSX.Element => {
   const {
     control,
+    watch,
     formState: { errors }
   } = useFormContext<FormValues>();
 
@@ -50,6 +51,7 @@ export const ExternalLibrariesFieldSet = (): JSX.Element => {
 
       {fields.map((field, index) => {
         const fieldError = errors.externalLibraries?.[index]?.uuid;
+        const fieldValue = watch(`externalLibraries.${index}.uuid`);
 
         return (
           <Stack key={field.id} space="2xsmall">
@@ -76,6 +78,12 @@ export const ExternalLibrariesFieldSet = (): JSX.Element => {
             {fieldError && (
               <span style={{ fontSize: 11, color: 'var(--figma-color-text-danger)' }}>
                 {fieldError.message}
+              </span>
+            )}
+            {!fieldError && isSelfHostedPenpotUrl(fieldValue) && (
+              <span style={{ fontSize: 11, color: 'var(--figma-color-text-warning)' }}>
+                This URL points to a self-hosted Penpot instance. The library and the files that use
+                it must live in the same instance.
               </span>
             )}
           </Stack>
