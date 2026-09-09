@@ -1,5 +1,22 @@
 # penpot-exporter
 
+## 0.25.0
+
+### Minor Changes
+
+- [#403](https://github.com/penpot/penpot-exporter-figma-plugin/pull/403)
+  [`aaec21e`](https://github.com/penpot/penpot-exporter-figma-plugin/commit/aaec21e8962ce213f9e29a37590543c1284b21a5)
+  Thanks [@girafic](https://github.com/girafic)! - Add a "Choose pages" export scope so a specific
+  set of pages can be selected for export, alongside the existing "All pages" and "Current page"
+  options. The export progress now also shows the name of the page currently being scanned.
+
+### Patch Changes
+
+- [#422](https://github.com/penpot/penpot-exporter-figma-plugin/pull/422)
+  [`08c05db`](https://github.com/penpot/penpot-exporter-figma-plugin/commit/08c05db0c8193282686a7b656d527821d4b8a1c2)
+  Thanks [@aerrasti](https://github.com/aerrasti)! - Allow self-hosted Penpot instance URLs in the
+  External Libraries field instead of rejecting any domain without "penpot" in it.
+
 ## 0.24.3
 
 ### Patch Changes
